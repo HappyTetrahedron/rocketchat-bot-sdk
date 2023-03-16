@@ -20,8 +20,7 @@ class RocketchatBot:
         self.user = None
         self._handlers = []
         self._loop = None
-        self._subscriptions = {} 
-        self._channel_subscription = ""
+        self._subscription = ""
 
     def run_forever(self):
         """Start this chat bot
@@ -36,12 +35,7 @@ class RocketchatBot:
     
     async def _start(self):
         await self.realtime.start(self._ws_url, username=self._user, password=self._password, token=self._token)
-        for channel_id, channel_type in await self.realtime.get_channels():
-            sub = await self.realtime.subscribe_to_channel_messages(channel_id, self._on_message)
-            self._subscriptions[sub] = channel_id
-
-        chan_sub = await self.realtime.subscribe_to_channel_changes(self._on_channel_change)
-        self._channel_subscription = chan_sub
+        self._subscription = await self.realtime.subscribe_to_channel_messages("__my_messages__", self._on_message)
         await self.realtime.run_forever()
 
     def add_handler(self, handler):
@@ -63,14 +57,17 @@ class RocketchatBot:
         self._loop.stop()
     
     async def _unsubscribe_all(self):
-        for sub in self._subscriptions.keys():
-            await self.realtime.unsubscribe(sub)
-        self._subscriptions = {}
-        await self.realtime.unsubscribe(self._channel_subscription)
-        self._channel_subscription = ""
+        await self.realtime.unsubscribe(self._subscription)
+        self._subscription = ""
 
     def _on_message(self, channel_id, sender_id, msg_id, message):
         if sender_id == self.user["_id"]:
+            return
+        if message.get('tcount', 0) > 0:
+            # Thread count update - we don't handle these, they're not new
+            return
+        if message.get('reactions'):
+            # Reaction added to message - we don't handle these, they're not new
             return
         if self._verbosity >= 1:
             print(f"Message received by {sender_id} in channel {channel_id}: {message['msg']}")
@@ -78,16 +75,18 @@ class RocketchatBot:
             if handler.matches(self, message):
                 handler.handle(self, message)
     
-    def _on_channel_change(self, channel_id, channel_type):
-        if channel_id not in self._subscriptions.values():
-            print("New channel {}".format(channel_id))
-            self._loop.create_task(self._add_subscription(channel_id))
+    def reply_to_message(self, message, reply_text):
+        """
+        Quickly send a message in the same channel as `message`.
+        :param message: A rocketchat message dict to which you want to reply
+        :param reply_text: String containing the text you want to reply with
+        """
+        tmid = message.get('tmid')
+        if tmid:
+            self.api.chat_post_message(reply_text, message["rid"], tmid=tmid)
+        else:
+            self.api.chat_post_message(reply_text, message["rid"])
     
-    async def _add_subscription(self, channel_id):
-        print("Subscribing channel {}".format(channel_id))
-        sub_id = await self.realtime.subscribe_to_channel_messages(channel_id, self._on_message)
-        self._subscriptions[sub_id] = channel_id
-
     @staticmethod
     def _format_ws_url(api_url):
         ws_url = api_url.replace("http://", "ws://").replace("https://", "wss://")
