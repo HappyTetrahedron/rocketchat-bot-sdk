@@ -1,0 +1,8 @@
+*.pyc
+venv
+*venv
+build
+dist
+*.egg-info
+.idea
+*test*.*

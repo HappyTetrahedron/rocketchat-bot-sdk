@@ -1,0 +1,3 @@
+[submodule "rocketchat-async"]
+	path = rocketchat-async
+	url = git@github.com:HappyTetrahedron/rocketchat-async.git
