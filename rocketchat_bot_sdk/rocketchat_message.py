@@ -17,6 +17,16 @@ class RocketchatMessage:
             self._bot.realtime.send_message(reply_text, self.data['rid'], thread_id=tmid)
         )
 
+    def reply_in_thread(self, reply_text):
+        """
+        Quickly send a message in this message's thread. If this message is already in a thread, simply send to the same thread.
+        :param reply_text: String containing the text you want to reply with
+        """
+        tmid = self.data.get('tmid', self.data.get('_id'))
+        asyncio.get_event_loop().create_task(
+            self._bot.realtime.send_message(reply_text, self.data['rid'], thread_id=tmid)
+        )
+
 
     def is_by_me(self):
         return self.data["u"]["_id"] == self._bot.user["_id"]
