@@ -104,14 +104,16 @@ class DirectMessageHandler(AbstractHandler):
 class MentionHandler(AbstractHandler):
     """A handler that responds to all messages mentioning the bot (or any specified users)"""
     ROOM_MENTIONS = ["all", "here"]
-    def __init__(self, callback_function, mention_user=None, mention_users=None):
+    def __init__(self, callback_function, include_all=False, mention_user=None, mention_users=None):
         """
         :param callback_function: The function to call when a matching message is received.
+        :param include_all: boolean indicating whether @all and @here mentions should trigger this handler, default False
         :param mention_user: Username of the user whose mentions shall call this handler. If not specified, use the bot's own username.
         :param mention_users: List of usernames of the users whose mentions shall call this handler. Supersedes `mention_user` if provided.
         The callback function is passed the RocketchatBot and RocketchatMessage as arguments
         """
         self.callback_function = callback_function
+        self.include_all = include_all
         self.mention_users = mention_users or ([mention_user] if mention_user else None)
 
     def matches(self, bot, message) -> bool:
@@ -123,7 +125,7 @@ class MentionHandler(AbstractHandler):
         for mention in message.data.get("mentions", []):
             if mention.get("username") in mus:
                 return True
-            if mention.get("username") in self.ROOM_MENTIONS:
+            if self.include_all and mention.get("username") in self.ROOM_MENTIONS:
                 return True
         return False
 
