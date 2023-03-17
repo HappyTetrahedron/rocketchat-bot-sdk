@@ -1,2 +1,2 @@
 from .rocketchat_bot import RocketchatBot
-from .handlers import RegexHandler, CommandHandler, MessageHandler, MentionHandler
+from .handlers import RegexHandler, CommandHandler, MessageHandler, MentionHandler, ReactionHandler

@@ -3,7 +3,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 setuptools.setup(
     name='rocketchat_bot_sdk',
-    version='0.0.3',
+    version='0.0.4',
     scripts=[],
     author="Aline Abler",
     author_email="alinea@riseup.net",
