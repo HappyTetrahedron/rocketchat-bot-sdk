@@ -29,3 +29,7 @@ class RocketchatMessage:
             # Reaction added to message - they're not new
             return False
         return True
+
+    def is_direct(self):
+        room = self._bot.api.rooms_info(room_id=self.data["rid"]).json()
+        return room.get("room", {}).get("t") == "d"

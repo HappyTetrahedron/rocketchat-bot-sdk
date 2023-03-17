@@ -83,6 +83,24 @@ class MessageHandler(AbstractHandler):
         self.callback_function(bot, message)
 
 
+class DirectMessageHandler(AbstractHandler):
+    """A handler that responds to all messages sent directly to the bot"""
+    def __init__(self, callback_function):
+        """
+        :param callback_function: The function to call when a matching message is received.
+        The callback function is passed the RocketchatBot and RocketchatMessage as arguments
+        """
+        self.callback_function = callback_function
+
+    def matches(self, bot, message) -> bool:
+        if message.is_by_me() or not message.is_new() or not message.is_direct():
+            return False
+        return True
+
+    def handle(self, bot, message):
+        self.callback_function(bot, message)
+
+
 class MentionHandler(AbstractHandler):
     """A handler that responds to all messages mentioning the bot (or any specified users)"""
     ROOM_MENTIONS = ["all", "here"]
