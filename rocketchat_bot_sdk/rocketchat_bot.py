@@ -1,5 +1,6 @@
 import base64
 import asyncio
+import traceback
 
 from threading import Thread
 
@@ -50,8 +51,13 @@ class RocketchatBot:
             print(f"Message received by {sender_id} in channel {channel_id}: {message['msg']}")
         message_obj = RocketchatMessage(self, message)
         for handler in self._handlers:
-            if handler.matches(self, message_obj):
-                handler.handle(self, message_obj)
+            try:
+                if handler.matches(self, message_obj):
+                    handler.handle(self, message_obj)
+            except Exception as e:
+                print("Exception in handler: {}".format(handler))
+                traceback.print_exc()
+
     
     @staticmethod
     def _format_ws_url(api_url):
